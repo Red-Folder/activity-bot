@@ -1,9 +1,7 @@
 ﻿using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace ActivityBot
@@ -11,6 +9,8 @@ namespace ActivityBot
     [Serializable]
     public class EchoDialog : IDialog<object>
     {
+        private static readonly HttpClient httpClient = new HttpClient();
+
         protected int count = 1;
 
         public Task StartAsync(IDialogContext context)
@@ -42,12 +42,22 @@ namespace ActivityBot
                     "Are you sure you want to reset the count?",
                     "Didn't get that!",
                     promptStyle: PromptStyle.Auto);
+                return;
             }
-            else
+
+            if (message.Text == "activity")
             {
-                await context.PostAsync($"{this.count++}: You did said {message.Text}");
-                context.Wait(MessageReceivedAsync);
+                var proxy = new ActivityProxy(httpClient);
+                
+                var response = await proxy.GetAwaiting();
+
+                await context.PostAsync(response);
+
+                return;
             }
+
+            await context.PostAsync($"{this.count++}: You did said {message.Text}");
+            context.Wait(MessageReceivedAsync);
         }
 
         public async Task AfterResetAsync(IDialogContext context, IAwaitable<bool> argument)
