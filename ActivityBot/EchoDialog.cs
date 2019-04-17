@@ -45,7 +45,7 @@ namespace ActivityBot
             }
             else
             {
-                await context.PostAsync($"{this.count++}: You said {message.Text}");
+                await context.PostAsync($"{this.count++}: You did said {message.Text}");
                 context.Wait(MessageReceivedAsync);
             }
         }
