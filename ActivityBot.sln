@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.489
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ActivityBot", "ActivityBot\ActivityBot.csproj", "{5FE76FC4-868F-4734-8A57-F51C05048B56}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ActivityBot", "ActivityBot\ActivityBot.csproj", "{84088313-8472-41C6-9978-A56AEDFBC7ED}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,15 +11,15 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{5FE76FC4-868F-4734-8A57-F51C05048B56}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5FE76FC4-868F-4734-8A57-F51C05048B56}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5FE76FC4-868F-4734-8A57-F51C05048B56}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5FE76FC4-868F-4734-8A57-F51C05048B56}.Release|Any CPU.Build.0 = Release|Any CPU
+		{84088313-8472-41C6-9978-A56AEDFBC7ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{84088313-8472-41C6-9978-A56AEDFBC7ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{84088313-8472-41C6-9978-A56AEDFBC7ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{84088313-8472-41C6-9978-A56AEDFBC7ED}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {A2B7F826-DC2C-400F-AB65-40B12D2B69E7}
+		SolutionGuid = {D7105F9C-B179-465B-9255-7F6DED5756D8}
 	EndGlobalSection
 EndGlobal
