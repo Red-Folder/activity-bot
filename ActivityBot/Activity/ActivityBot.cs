@@ -44,6 +44,17 @@ namespace ActivityBot.Activity
             // see https://aka.ms/about-bot-activity-message to learn more about the message and other activity types
             if (turnContext.Activity.Type == ActivityTypes.Message)
             {
+                //if (turnContext.Activity.Text.StartsWith("approve"))
+                //{
+
+                //    return;
+                //}
+
+                //if (turnContext.Activity.Text.StartsWith("decline"))
+                //{
+
+                //    return;
+                //}
 
                 if (turnContext.Activity.Text == "activity")
                 {
@@ -53,12 +64,27 @@ namespace ActivityBot.Activity
                     {
                         foreach (var activity in awaitingActivities)
                         {
-                            var awaitingMessage = turnContext.Activity.CreateReply();
-                            awaitingMessage.Text = $"Week Nunber: {activity.WeekNumber}";
-                            awaitingMessage.TextFormat = "plain";
-                            awaitingMessage.Attachments.Add(new Attachment(contentUrl: activity.ImageUrl, name: "Activity Image"));
+                            var reply = turnContext.Activity.CreateReply();
 
-                            await turnContext.SendActivityAsync(awaitingMessage);
+                            var card = new HeroCard(
+                                    title: $"Week Nunber: {activity.WeekNumber}",
+                                    text: $"Activity for {activity.From.ToShortDateString()} to {activity.To.ToShortDateString()}",
+                                    images: new CardImage[] { new CardImage(url: activity.ImageUrl) },
+                                    buttons: new CardAction[]
+                                    {
+                                        new CardAction(
+                                            title: "Approve", 
+                                            type: ActionTypes.PostBack, 
+                                            value: $"approve {activity.InstanceId} {activity.EventName}"),
+                                        new CardAction(
+                                            title: "Discard", 
+                                            type: ActionTypes.PostBack, 
+                                            value: $"discard {activity.InstanceId} {activity.EventName}"),
+                                    }
+                                );
+                            reply.Attachments.Add(card.ToAttachment());
+
+                            await turnContext.SendActivityAsync(reply);
                         }
                         return;
                     }
