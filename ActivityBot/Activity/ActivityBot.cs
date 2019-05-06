@@ -21,13 +21,13 @@ namespace ActivityBot.Activity
         private readonly ILogger _logger;
         private readonly ActivityProxy _activityProxy;
 
-        //private readonly Configuration _configuration;
+        private readonly Configuration _configuration;
 
         public ActivityBot(ConversationState conversationState,
                             NotificationState notificationState,
                             ILoggerFactory loggerFactory,
-                            ActivityProxy activityProxy)
-                            //Configuration configuration)
+                            ActivityProxy activityProxy,
+                            Configuration configuration)
         {
             if (conversationState == null)
             {
@@ -63,7 +63,7 @@ namespace ActivityBot.Activity
 
             _activityProxy = activityProxy;
 
-            //_configuration = configuration;
+            _configuration = configuration;
         }
 
         public async Task OnTurnAsync(ITurnContext turnContext, CancellationToken cancellationToken = default(CancellationToken))
@@ -190,10 +190,10 @@ namespace ActivityBot.Activity
                     {
                         try
                         {
-                            //await turnContext.Adapter.ContinueConversationAsync(_configuration.AppId,
-                            //                                                    conversation,
-                            //                                                    CreateCallback("Hello World"),
-                            //                                                    cancellationToken);
+                            await turnContext.Adapter.ContinueConversationAsync(_configuration.AppId,
+                                                                                conversation,
+                                                                                CreateCallback("Hello World"),
+                                                                                cancellationToken);
                         }
                         catch (Exception ex)
                         {

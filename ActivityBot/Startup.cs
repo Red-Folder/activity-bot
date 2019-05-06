@@ -88,10 +88,10 @@ namespace ActivityBot
                 };
             });
 
-            //services.AddSingleton(new Configuration
-            //{
-            //    AppId = string.IsNullOrEmpty(microsoftBotApplicationId) ? "LocalEmulator" : microsoftBotApplicationId
-            //});
+            services.AddSingleton(new Configuration
+            {
+                AppId = string.IsNullOrEmpty(microsoftBotApplicationId) ? "LocalEmulator" : microsoftBotApplicationId
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
