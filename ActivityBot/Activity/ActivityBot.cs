@@ -15,9 +15,6 @@ namespace ActivityBot.Activity
     {
         private readonly ActivityBotAccessors _accessors;
 
-        private readonly NotificationState _notificationState;
-        private readonly NotificationStateAccessors _notificationsAccessors;
-
         private readonly ILogger _logger;
         private readonly ActivityProxy _activityProxy;
 
@@ -50,14 +47,6 @@ namespace ActivityBot.Activity
                 NotificationList = notificationState.CreateProperty<NotificationList>(NotificationStateAccessors.NotificationListName)
             };
 
-            //_notificationsAccessors = new NotificationStateAccessors(notificationState)
-            //{
-            //    NotificationList = notificationState.CreateProperty<NotificationState>(NotificationStateAccessors.NotificationListName)
-            //};
-
-
-            //_notifcationsAccessor = _notificationState.CreateProperty<NotificationList>(nameof(NotificationList));
-
             _logger = loggerFactory.CreateLogger<ActivityBot>();
             _logger.LogTrace("Turn start.");
 
@@ -68,11 +57,6 @@ namespace ActivityBot.Activity
 
         public async Task OnTurnAsync(ITurnContext turnContext, CancellationToken cancellationToken = default(CancellationToken))
         {
-
-
-            // Handle Message activity type, which is the main activity type for shown within a conversational interface
-            // Message activities may contain text, speech, interactive cards, and binary or unknown attachments.
-            // see https://aka.ms/about-bot-activity-message to learn more about the message and other activity types
             if (turnContext.Activity.Type == ActivityTypes.Message)
             {
                 if (turnContext.Activity.Text.StartsWith("approve", StringComparison.CurrentCultureIgnoreCase))
@@ -223,30 +207,8 @@ namespace ActivityBot.Activity
                 return;
             }
 
-            /*
-            if (turnContext.Activity.Type is ActivityTypes.Event)
-            {
-                var notificationList = await _notifcationsAccessor.GetAsync(turnContext, () => new NotificationList { Conversations = new System.Collections.Generic.List<ConversationReference>() });
-
-            }
-            */
-
             await turnContext.SendActivityAsync($"{turnContext.Activity.Type} event detected");
         }
-
-        //private async Task NotificationAsync(BotAdapter adapter,
-        //                                    string botId,
-        //                                    NotificationList notificationList,
-        //                                    string message,
-        //                                    CancellationToken cancellationToken = default(CancellationToken))
-        //{
-        //    if (notificationList?.Conversations == null) return;
-
-        //    foreach (var conversation in notificationList.Conversations)
-        //    {
-        //        await adapter.ContinueConversationAsync(botId, conversation, CreateCallback(message), cancellationToken);
-        //    }
-        //}
 
         private BotCallbackHandler CreateCallback(string message)
         {
