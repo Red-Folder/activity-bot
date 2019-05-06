@@ -163,7 +163,7 @@ namespace ActivityBot.Activity
                     return;
                 }
 
-                if (turnContext.Activity.Text.Equals("broadcast", StringComparison.CurrentCultureIgnoreCase))
+                if (turnContext.Activity.Text.StartsWith("broadcast", StringComparison.CurrentCultureIgnoreCase))
                 {
                     var notificationList = await _accessors.NotificationList.GetAsync(turnContext, () => new NotificationList
                     {
@@ -174,9 +174,10 @@ namespace ActivityBot.Activity
                     {
                         try
                         {
+                            var message = turnContext.Activity.Text.Substring("broadcast".Length);
                             await turnContext.Adapter.ContinueConversationAsync(_configuration.AppId,
                                                                                 conversation,
-                                                                                CreateCallback("Hello World"),
+                                                                                CreateCallback(message),
                                                                                 cancellationToken);
                         }
                         catch (Exception ex)
