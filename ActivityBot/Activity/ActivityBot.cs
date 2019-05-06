@@ -3,6 +3,9 @@ using ActivityBot.Activity.Proxy;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Schema;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,14 +14,29 @@ namespace ActivityBot.Activity
     public class ActivityBot : IBot
     {
         private readonly ActivityBotAccessors _accessors;
+
+        private readonly NotificationState _notificationState;
+        private readonly NotificationStateAccessors _notificationsAccessors;
+
         private readonly ILogger _logger;
         private readonly ActivityProxy _activityProxy;
 
-        public ActivityBot(ConversationState conversationState, ILoggerFactory loggerFactory, ActivityProxy activityProxy)
+        //private readonly Configuration _configuration;
+
+        public ActivityBot(ConversationState conversationState,
+                            NotificationState notificationState,
+                            ILoggerFactory loggerFactory,
+                            ActivityProxy activityProxy)
+                            //Configuration configuration)
         {
             if (conversationState == null)
             {
                 throw new System.ArgumentNullException(nameof(conversationState));
+            }
+
+            if (notificationState == null)
+            {
+                throw new System.ArgumentNullException(nameof(notificationState));
             }
 
             if (loggerFactory == null)
@@ -26,37 +44,82 @@ namespace ActivityBot.Activity
                 throw new System.ArgumentNullException(nameof(loggerFactory));
             }
 
-            _accessors = new ActivityBotAccessors(conversationState)
+            _accessors = new ActivityBotAccessors(conversationState, notificationState)
             {
                 CounterState = conversationState.CreateProperty<CounterState>(ActivityBotAccessors.CounterStateName),
+                NotificationList = notificationState.CreateProperty<NotificationList>(NotificationStateAccessors.NotificationListName)
             };
+
+            //_notificationsAccessors = new NotificationStateAccessors(notificationState)
+            //{
+            //    NotificationList = notificationState.CreateProperty<NotificationState>(NotificationStateAccessors.NotificationListName)
+            //};
+
+
+            //_notifcationsAccessor = _notificationState.CreateProperty<NotificationList>(nameof(NotificationList));
 
             _logger = loggerFactory.CreateLogger<ActivityBot>();
             _logger.LogTrace("Turn start.");
 
             _activityProxy = activityProxy;
+
+            //_configuration = configuration;
         }
 
         public async Task OnTurnAsync(ITurnContext turnContext, CancellationToken cancellationToken = default(CancellationToken))
         {
+
+
             // Handle Message activity type, which is the main activity type for shown within a conversational interface
             // Message activities may contain text, speech, interactive cards, and binary or unknown attachments.
             // see https://aka.ms/about-bot-activity-message to learn more about the message and other activity types
             if (turnContext.Activity.Type == ActivityTypes.Message)
             {
-                //if (turnContext.Activity.Text.StartsWith("approve"))
-                //{
+                if (turnContext.Activity.Text.StartsWith("approve", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    var request = new ApproveRequest
+                    {
+                        InstanceId = turnContext.Activity.Text.Split(' ')[1],
+                        EventName = turnContext.Activity.Text.Split(' ')[2],
+                        Approved = true
+                    };
 
-                //    return;
-                //}
+                    try
+                    {
+                        await _activityProxy.Approve(request);
+                        await turnContext.SendActivityAsync("Completed");
+                    }
+                    catch (Exception ex)
+                    {
+                        await turnContext.SendActivityAsync($"Failed: {ex.Message}");
+                    }
 
-                //if (turnContext.Activity.Text.StartsWith("decline"))
-                //{
+                    return;
+                }
 
-                //    return;
-                //}
+                if (turnContext.Activity.Text.StartsWith("decline", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    var request = new ApproveRequest
+                    {
+                        InstanceId = turnContext.Activity.Text.Split(' ')[1],
+                        EventName = turnContext.Activity.Text.Split(' ')[2],
+                        Approved = false
+                    };
 
-                if (turnContext.Activity.Text == "activity")
+                    try
+                    {
+                        await _activityProxy.Approve(request);
+                        await turnContext.SendActivityAsync("Completed");
+                    }
+                    catch (Exception ex)
+                    {
+                        await turnContext.SendActivityAsync($"Failed: {ex.Message}");
+                    }
+
+                    return;
+                }
+
+                if (turnContext.Activity.Text.Equals("activity", StringComparison.CurrentCultureIgnoreCase))
                 {
                     var awaitingActivities = await _activityProxy.GetAwaiting();
 
@@ -73,12 +136,12 @@ namespace ActivityBot.Activity
                                     buttons: new CardAction[]
                                     {
                                         new CardAction(
-                                            title: "Approve", 
-                                            type: ActionTypes.PostBack, 
+                                            title: "Approve",
+                                            type: ActionTypes.PostBack,
                                             value: $"approve {activity.InstanceId} {activity.EventName}"),
                                         new CardAction(
-                                            title: "Discard", 
-                                            type: ActionTypes.PostBack, 
+                                            title: "Discard",
+                                            type: ActionTypes.PostBack,
                                             value: $"discard {activity.InstanceId} {activity.EventName}"),
                                     }
                                 );
@@ -90,6 +153,54 @@ namespace ActivityBot.Activity
                     }
 
                     await turnContext.SendActivityAsync("No awaiting activities");
+                    return;
+                }
+
+                if (turnContext.Activity.Text.Equals("notifications register", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    var notificationList = await _accessors.NotificationList.GetAsync(turnContext, () => new NotificationList
+                    {
+                        Conversations = new List<ConversationReference>()
+                    });
+
+                    if (notificationList.Conversations.Any(x => x.Conversation.Id == turnContext.Activity.GetConversationReference().Conversation.Id))
+                    {
+                        await turnContext.SendActivityAsync("This conversation is already registered");
+                    }
+                    else
+                    {
+                        notificationList.Conversations.Add(turnContext.Activity.GetConversationReference());
+                        await _accessors.NotificationList.SetAsync(turnContext, notificationList);
+                        await _accessors.NotificationState.SaveChangesAsync(turnContext);
+
+                        await turnContext.SendActivityAsync("Conversation now registered");
+                    }
+
+                    return;
+                }
+
+                if (turnContext.Activity.Text.Equals("broadcast", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    var notificationList = await _accessors.NotificationList.GetAsync(turnContext, () => new NotificationList
+                    {
+                        Conversations = new List<ConversationReference>()
+                    });
+
+                    foreach (var conversation in notificationList.Conversations)
+                    {
+                        try
+                        {
+                            //await turnContext.Adapter.ContinueConversationAsync(_configuration.AppId,
+                            //                                                    conversation,
+                            //                                                    CreateCallback("Hello World"),
+                            //                                                    cancellationToken);
+                        }
+                        catch (Exception ex)
+                        {
+                            await turnContext.SendActivityAsync(ex.Message);
+                        }
+                    }
+
                     return;
                 }
 
@@ -108,11 +219,42 @@ namespace ActivityBot.Activity
                 // Echo back to the user whatever they typed.
                 var responseMessage = $"Turn {state.TurnCount}: You sent '{turnContext.Activity.Text}'\n";
                 await turnContext.SendActivityAsync(responseMessage);
+
+                return;
             }
-            else
+
+            /*
+            if (turnContext.Activity.Type is ActivityTypes.Event)
             {
-                await turnContext.SendActivityAsync($"{turnContext.Activity.Type} event detected");
+                var notificationList = await _notifcationsAccessor.GetAsync(turnContext, () => new NotificationList { Conversations = new System.Collections.Generic.List<ConversationReference>() });
+
             }
+            */
+
+            await turnContext.SendActivityAsync($"{turnContext.Activity.Type} event detected");
+        }
+
+        //private async Task NotificationAsync(BotAdapter adapter,
+        //                                    string botId,
+        //                                    NotificationList notificationList,
+        //                                    string message,
+        //                                    CancellationToken cancellationToken = default(CancellationToken))
+        //{
+        //    if (notificationList?.Conversations == null) return;
+
+        //    foreach (var conversation in notificationList.Conversations)
+        //    {
+        //        await adapter.ContinueConversationAsync(botId, conversation, CreateCallback(message), cancellationToken);
+        //    }
+        //}
+
+        private BotCallbackHandler CreateCallback(string message)
+        {
+            return async (turnContext, token) =>
+            {
+                // Send the user a proactive confirmation message.
+                await turnContext.SendActivityAsync(message);
+            };
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System.Net.Http;
+using ActivityBot.Activity.Models;
 using ActivityBot.Activity.Proxy;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -30,8 +31,16 @@ namespace ActivityBot
         public void ConfigureServices(IServiceCollection services)
         {
             //services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            var activityProxyConfiguration = new ActivityProxyConfiguration
+            {
+                GetPendingApprovalsUrl = Configuration.GetSection("GetPendingApprovalsUrl")?.Value,
+                ApproveUrl = Configuration.GetSection("ApproveUrl")?.Value,
+                ManuallyTriggerWeeklyActivityUrl = Configuration.GetSection("ManuallyTriggerWeeklyActivityUrl")?.Value
+            };
+            services.AddSingleton(activityProxyConfiguration);
 
-            services.AddTransient(x => new ActivityProxy(_httpClient, Configuration.GetSection("GetPendingApprovalsUrl")?.Value));
+            services.AddHttpClient(ActivityProxy.HTTP_CLIENT_NAME);
+            services.AddTransient<ActivityProxy>();
 
             // Memory Storage is for local bot debugging only. When the bot
             // is restarted, everything stored in memory will be gone.
@@ -59,6 +68,9 @@ namespace ActivityBot
             var conversationState = new ConversationState(dataStore);
             services.AddSingleton(conversationState);
 
+            var notificationState = new NotificationState(dataStore);
+            services.AddSingleton(notificationState);
+
             var microsoftBotApplicationId = Configuration.GetSection("MicrosoftBotApplicationId")?.Value;
             var microsoftBotApplicationPassword = Configuration.GetSection("MicrosoftBotApplicationPassword")?.Value;
             services.AddBot<Activity.ActivityBot>(options =>
@@ -75,6 +87,11 @@ namespace ActivityBot
                     await context.SendActivityAsync("Sorry, it looks like something went wrong.");
                 };
             });
+
+            //services.AddSingleton(new Configuration
+            //{
+            //    AppId = string.IsNullOrEmpty(microsoftBotApplicationId) ? "LocalEmulator" : microsoftBotApplicationId
+            //});
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

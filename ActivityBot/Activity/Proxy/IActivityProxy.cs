@@ -7,5 +7,6 @@ namespace ActivityBot.Activity.Proxy
     public interface IActivityProxy
     {
         Task<List<Awaiting>> GetAwaiting();
+        Task Approve(ApproveRequest request);
     }
 }

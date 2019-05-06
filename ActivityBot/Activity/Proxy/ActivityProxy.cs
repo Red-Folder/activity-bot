@@ -3,26 +3,48 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace ActivityBot.Activity.Proxy
 {
     public class ActivityProxy : IActivityProxy
     {
-        private readonly HttpClient _httpClient;
-        private readonly string _url;
+        public const string HTTP_CLIENT_NAME = "ActivityProxy";
 
-        public ActivityProxy(HttpClient httpClient, string url)
+        private readonly HttpClient _httpClient;
+        private readonly ActivityProxyConfiguration _configuration;
+
+        public ActivityProxy(IHttpClientFactory clientFactory, ActivityProxyConfiguration configuration)
         {
-            _httpClient = httpClient;
-            _url = url;
+            _httpClient = clientFactory.CreateClient(HTTP_CLIENT_NAME);
+            _configuration = configuration;
+        }
+
+        public async Task Approve(ApproveRequest request)
+        {
+            try
+            {
+                var json = JsonConvert.SerializeObject(request);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                var response = await _httpClient.PostAsync(_configuration.ApproveUrl, content);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new Exception($"Failed: {response.StatusCode} - {response.ReasonPhrase}");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
         }
 
         public async Task<List<Awaiting>> GetAwaiting()
         {
             try
             {
-                var response = await _httpClient.GetAsync(_url);
+                var response = await _httpClient.GetAsync(_configuration.GetPendingApprovalsUrl);
 
                 var json = await response.Content.ReadAsStringAsync();
 
