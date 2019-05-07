@@ -1,4 +1,5 @@
 ﻿using System.Net.Http;
+using ActivityBot.Activity.Handlers;
 using ActivityBot.Activity.Models;
 using ActivityBot.Activity.Proxy;
 using Microsoft.AspNetCore.Builder;
@@ -92,6 +93,9 @@ namespace ActivityBot
             {
                 AppId = string.IsNullOrEmpty(microsoftBotApplicationId) ? "LocalEmulator" : microsoftBotApplicationId
             });
+
+            services.AddTransient<BroadcastCallbackFactory>();
+            services.AddTransient<BroadcastHandler>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

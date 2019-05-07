@@ -1,4 +1,5 @@
-﻿using ActivityBot.Activity.Models;
+﻿using ActivityBot.Activity.Handlers;
+using ActivityBot.Activity.Models;
 using ActivityBot.Activity.Proxy;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Schema;
@@ -20,10 +21,13 @@ namespace ActivityBot.Activity
 
         private readonly Configuration _configuration;
 
+        private readonly BroadcastHandler _broadcastHandler;
+
         public ActivityBot(ConversationState conversationState,
                             NotificationState notificationState,
                             ILoggerFactory loggerFactory,
                             ActivityProxy activityProxy,
+                            BroadcastHandler broadcastHandler,
                             Configuration configuration)
         {
             if (conversationState == null)
@@ -53,6 +57,8 @@ namespace ActivityBot.Activity
             _activityProxy = activityProxy;
 
             _configuration = configuration;
+
+            _broadcastHandler = broadcastHandler;
         }
 
         public async Task OnTurnAsync(ITurnContext turnContext, CancellationToken cancellationToken = default(CancellationToken))
@@ -165,26 +171,28 @@ namespace ActivityBot.Activity
 
                 if (turnContext.Activity.Text.StartsWith("broadcast", StringComparison.CurrentCultureIgnoreCase))
                 {
-                    var notificationList = await _accessors.NotificationList.GetAsync(turnContext, () => new NotificationList
-                    {
-                        Conversations = new List<ConversationReference>()
-                    });
+                    await _broadcastHandler.Handle(turnContext, _accessors, cancellationToken);
 
-                    foreach (var conversation in notificationList.Conversations)
-                    {
-                        try
-                        {
-                            var message = turnContext.Activity.Text.Substring("broadcast".Length);
-                            await turnContext.Adapter.ContinueConversationAsync(_configuration.AppId,
-                                                                                conversation,
-                                                                                CreateCallback(message),
-                                                                                cancellationToken);
-                        }
-                        catch (Exception ex)
-                        {
-                            await turnContext.SendActivityAsync(ex.Message);
-                        }
-                    }
+                    //var notificationList = await _accessors.NotificationList.GetAsync(turnContext, () => new NotificationList
+                    //{
+                    //    Conversations = new List<ConversationReference>()
+                    //});
+
+                    //foreach (var conversation in notificationList.Conversations)
+                    //{
+                    //    try
+                    //    {
+                    //        var message = turnContext.Activity.Text.Substring("broadcast".Length);
+                    //        await turnContext.Adapter.ContinueConversationAsync(_configuration.AppId,
+                    //                                                            conversation,
+                    //                                                            CreateCallback(message),
+                    //                                                            cancellationToken);
+                    //    }
+                    //    catch (Exception ex)
+                    //    {
+                    //        await turnContext.SendActivityAsync(ex.Message);
+                    //    }
+                    //}
 
                     return;
                 }
@@ -211,13 +219,13 @@ namespace ActivityBot.Activity
             await turnContext.SendActivityAsync($"{turnContext.Activity.Type} event detected");
         }
 
-        private BotCallbackHandler CreateCallback(string message)
-        {
-            return async (turnContext, token) =>
-            {
-                // Send the user a proactive confirmation message.
-                await turnContext.SendActivityAsync(message);
-            };
-        }
+        //private BotCallbackHandler CreateCallback(string message)
+        //{
+        //    return async (turnContext, token) =>
+        //    {
+        //        // Send the user a proactive confirmation message.
+        //        await turnContext.SendActivityAsync(message);
+        //    };
+        //}
     }
 }
