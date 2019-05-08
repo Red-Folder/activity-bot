@@ -52,5 +52,8 @@ namespace ActivityBot.Activity.Models.Broadcast
 
         [JsonProperty("actioned")]
         public bool Actioned { get; set; }
+
+        [JsonProperty("category")]
+        public string Category { get; set; }
     }
 }

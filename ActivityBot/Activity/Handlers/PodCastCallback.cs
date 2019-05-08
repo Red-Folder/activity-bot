@@ -17,7 +17,7 @@ namespace ActivityBot.Activity.Handlers
         {
             return async (turnContext, token) =>
             {
-                await turnContext.SendActivityAsync($"New Podcast: {_model.EpisodeName}");
+                await turnContext.SendActivityAsync($"New Podcast: {_model.EpisodeName}, category: {_model.Category}");
             };
         }
     }
