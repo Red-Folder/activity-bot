@@ -5,6 +5,7 @@ using ActivityBot.Activity.Proxy;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Bot.Builder;
+using Microsoft.Bot.Builder.Azure;
 using Microsoft.Bot.Builder.Integration.AspNet.Core;
 using Microsoft.Bot.Connector.Authentication;
 using Microsoft.Extensions.Configuration;
@@ -36,7 +37,9 @@ namespace ActivityBot
             {
                 GetPendingApprovalsUrl = Configuration.GetSection("GetPendingApprovalsUrl")?.Value,
                 ApproveUrl = Configuration.GetSection("ApproveUrl")?.Value,
-                ManuallyTriggerWeeklyActivityUrl = Configuration.GetSection("ManuallyTriggerWeeklyActivityUrl")?.Value
+                ManuallyTriggerWeeklyActivityUrl = Configuration.GetSection("ManuallyTriggerWeeklyActivityUrl")?.Value,
+                StateStorageConnectionString = Configuration.GetSection("StateStorageConnectionString")?.Value,
+                StateStorageContainer = Configuration.GetSection("StateStorageContainer")?.Value,
             };
             services.AddSingleton(activityProxyConfiguration);
 
@@ -45,25 +48,32 @@ namespace ActivityBot
 
             // Memory Storage is for local bot debugging only. When the bot
             // is restarted, everything stored in memory will be gone.
-            IStorage dataStore = new MemoryStorage();
+            IStorage dataStore = null;
 
-            // For production bots use the Azure Blob or
-            // Azure CosmosDB storage providers. For the Azure
-            // based storage providers, add the Microsoft.Bot.Builder.Azure
-            // Nuget package to your solution. That package is found at:
-            // https://www.nuget.org/packages/Microsoft.Bot.Builder.Azure/
-            // Un-comment the following lines to use Azure Blob Storage
-            // // Storage configuration name or ID from the .bot file.
-            // const string StorageConfigurationId = "<STORAGE-NAME-OR-ID-FROM-BOT-FILE>";
-            // var blobConfig = botConfig.FindServiceByNameOrId(StorageConfigurationId);
-            // if (!(blobConfig is BlobStorageService blobStorageConfig))
-            // {
-            //    throw new InvalidOperationException($"The .bot file does not contain an blob storage with name '{StorageConfigurationId}'.");
-            // }
-            // // Default container name.
-            // const string DefaultBotContainer = "<DEFAULT-CONTAINER>";
-            // var storageContainer = string.IsNullOrWhiteSpace(blobStorageConfig.Container) ? DefaultBotContainer : blobStorageConfig.Container;
-            // IStorage dataStore = new Microsoft.Bot.Builder.Azure.AzureBlobStorage(blobStorageConfig.ConnectionString, storageContainer);
+            if (_isProduction)
+            {
+                // For production bots use the Azure Blob or
+                // Azure CosmosDB storage providers. For the Azure
+                // based storage providers, add the Microsoft.Bot.Builder.Azure
+                // Nuget package to your solution. That package is found at:
+                // https://www.nuget.org/packages/Microsoft.Bot.Builder.Azure/
+                // Un-comment the following lines to use Azure Blob Storage
+                // // Storage configuration name or ID from the .bot file.
+                //const string StorageConfigurationId = "<STORAGE-NAME-OR-ID-FROM-BOT-FILE>";
+                //var blobConfig = botConfig.FindServiceByNameOrId(StorageConfigurationId);
+                //if (!(blobConfig is BlobStorageService blobStorageConfig))
+                //{
+                //    throw new InvalidOperationException($"The .bot file does not contain an blob storage with name '{StorageConfigurationId}'.");
+                //}
+                //// Default container name.
+                //const string DefaultBotContainer = "<DEFAULT-CONTAINER>";
+                //var storageContainer = string.IsNullOrWhiteSpace(blobStorageConfig.Container) ? DefaultBotContainer : blobStorageConfig.Container;
+                dataStore = new AzureBlobStorage(activityProxyConfiguration.StateStorageConnectionString, activityProxyConfiguration.StateStorageContainer);
+            }
+            else
+            {
+                dataStore = new MemoryStorage();
+            }
 
             // Create and add conversation state.
             var conversationState = new ConversationState(dataStore);
