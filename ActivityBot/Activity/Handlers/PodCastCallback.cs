@@ -1,6 +1,8 @@
 ﻿using ActivityBot.Activity.Models.Broadcast;
 using Microsoft.Bot.Builder;
+using Microsoft.Bot.Schema;
 using Newtonsoft.Json;
+using System.Text;
 
 namespace ActivityBot.Activity.Handlers
 {
@@ -17,7 +19,26 @@ namespace ActivityBot.Activity.Handlers
         {
             return async (turnContext, token) =>
             {
-                await turnContext.SendActivityAsync($"New Podcast: {_model.EpisodeName}, category: {_model.Category}");
+                var builder = new StringBuilder();
+                builder.AppendLine("# New podcast");
+                builder.AppendLine($"Feed: {_model.FeedName}");
+                builder.AppendLine($"Episode: {_model.EpisodeName}");
+                builder.AppendLine($"Category: {_model.Category}");
+                builder.AppendLine($"Url: {_model.EpisodeUrl}");
+
+                var activity = new Microsoft.Bot.Schema.Activity
+                {
+                    Type = ActivityTypes.Message,
+                    From = new ChannelAccount
+                    {
+                        Id = "ActivityBot",
+                        Name = "Activity Bot"
+                    },
+                    TextFormat = "markdown",
+                    Text = builder.ToString()
+                };
+
+                await turnContext.SendActivityAsync(activity);
             };
         }
     }
