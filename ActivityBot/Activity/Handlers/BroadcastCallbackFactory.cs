@@ -2,11 +2,11 @@
 {
     public class BroadcastCallbackFactory
     {
-        public PodCastCallback GetCallback(string payloadType, string payload)
+        public ICallback GetCallback(string payloadType, string payload)
         {
             if (payloadType == "WeekylActivity")
             {
-                return new WeekylActivityCallback(payload);
+                return new WeeklyActivityCallback(payload);
             }
 
             return new PodCastCallback(payload);

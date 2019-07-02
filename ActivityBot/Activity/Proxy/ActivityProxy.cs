@@ -55,5 +55,24 @@ namespace ActivityBot.Activity.Proxy
                 throw ex;
             }
         }
+
+        public async Task ManuallyTriggerWeeklyActivity(ManuallyTriggerWeeklyActivityRequest request)
+        {
+            try
+            {
+                var json = JsonConvert.SerializeObject(request);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                var response = await _httpClient.PostAsync(_configuration.ManuallyTriggerWeeklyActivityUrl, content);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new Exception($"Failed: {response.StatusCode} - {response.ReasonPhrase}");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
     }
 }

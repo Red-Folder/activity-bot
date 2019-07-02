@@ -8,5 +8,6 @@ namespace ActivityBot.Activity.Proxy
     {
         Task<List<Awaiting>> GetAwaiting();
         Task Approve(ApproveRequest request);
+        Task ManuallyTriggerWeeklyActivity(ManuallyTriggerWeeklyActivityRequest request);
     }
 }

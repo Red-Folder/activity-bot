@@ -197,6 +197,49 @@ namespace ActivityBot.Activity
                     return;
                 }
 
+                if (turnContext.Activity.Text.StartsWith("trigger", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    var tokens = turnContext.Activity.Text.Split(' ');
+                    if (tokens.Length != 3)
+                    {
+                        await turnContext.SendActivityAsync("Expecting format: trigger {weekNumber} {year}");
+                        return;
+                    }
+
+                    int weekNumber;
+                    if (!int.TryParse(tokens[1], out weekNumber))
+                    {
+                        await turnContext.SendActivityAsync($"weekNumber should be a number - {tokens[1]}");
+                        return;
+                    }
+
+                    int year;
+                    if (!int.TryParse(tokens[2], out year))
+                    {
+                        await turnContext.SendActivityAsync($"year should be a number - {tokens[2]}");
+                        return;
+                    }
+
+                    var request = new ManuallyTriggerWeeklyActivityRequest
+                    {
+                        StartFrom = "FromScreenCapture",
+                        WeekNumber = weekNumber,
+                        Year = year
+                    };
+
+                    try
+                    {
+                        await _activityProxy.ManuallyTriggerWeeklyActivity(request);
+                        await turnContext.SendActivityAsync("Requested");
+                    }
+                    catch (Exception ex)
+                    {
+                        await turnContext.SendActivityAsync($"Failed: {ex.Message}");
+                    }
+
+                    return;
+                }
+
                 // Get the conversation state from the turn context.
                 var state = await _accessors.CounterState.GetAsync(turnContext, () => new CounterState());
 
