@@ -87,7 +87,7 @@ namespace ActivityBot.Activity
                     return;
                 }
 
-                if (turnContext.Activity.Text.StartsWith("decline", StringComparison.CurrentCultureIgnoreCase))
+                if (turnContext.Activity.Text.StartsWith("discard", StringComparison.CurrentCultureIgnoreCase))
                 {
                     var request = new ApproveRequest
                     {
