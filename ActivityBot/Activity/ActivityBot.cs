@@ -80,9 +80,9 @@ namespace ActivityBot.Activity
                 if (!done)
                 {
                     var builder = new StringBuilder();
-                    builder.AppendLine($"Unknown command.  You sent '{turnContext.Activity.Text}'");
-                    builder.AppendLine("Available options:");
-                    _commands.ForEach(x => builder.AppendLine(x.CommandSummary));
+                    builder.Append($"Unknown command.  You sent '{turnContext.Activity.Text}'\n\n");
+                    builder.Append("Available options:\n\n");
+                    _commands.ForEach(x => builder.Append($"{x.CommandSummary}\n\n"));
                     await turnContext.SendActivityAsync(builder.ToString());
                 }
                 return;
