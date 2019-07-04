@@ -107,13 +107,12 @@ namespace ActivityBot.Activity.Commands
                     {
                         Register = tokens[1].Equals(REGISTER_KEYWORD, StringComparison.CurrentCultureIgnoreCase);
                         IsValid = true;
+                        return;
                     }
-
                 }
 
                 IsValid = false;
                 ValidationFailureMessage = $"Expecting format: {COMMAND_FORMAT}";
-                return;
             }
 
             public bool IsValid;
