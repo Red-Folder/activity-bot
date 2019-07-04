@@ -69,6 +69,7 @@ namespace ActivityBot.Activity
             _commands.Add(new AwaitingApprovals(_activityProxy));
             _commands.Add(new Notifications(_accessors));
             _commands.Add(new Trigger(_activityProxy));
+            _commands.Add(new Broadcast(_broadcastHandler, _accessors));
         }
 
         public async Task OnTurnAsync(ITurnContext turnContext, CancellationToken cancellationToken = default(CancellationToken))
